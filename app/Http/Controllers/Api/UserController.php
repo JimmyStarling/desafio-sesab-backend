@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Model\User;
-
 use App\Http\Controllers\Controller;
+
+use App\Models\User;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
+
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with(['profile', 'addresses']);
+        $query = User::with(['profile', 'address']);
 
         if ($request->filled('name')) {
             $query->where('name', 'like', '%' . $request->name . '%');
@@ -29,20 +32,20 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         $user = User::create($request->validated());
-        $user->addresses()->sync($request->addresses);
-        return response()->json($user->load('profile', 'addresses'), 201);
+        $user->address()->sync($request->address);
+        return response()->json($user->load('profile', 'address'), 201);
     }
 
     public function show(User $user)
     {
-        return response()->json($user->load('profile', 'addresses'));
+        return response()->json($user->load('profile', 'address'));
     }
 
     public function update(UpdateUserRequest $request, User $user)
     {
         $user->update($request->validated());
-        $user->addresses()->sync($request->addresses);
-        return response()->json($user->load('profile', 'addresses'));
+        $user->address()->sync($request->address);
+        return response()->json($user->load('profile', 'address'));
     }
 
     public function destroy(User $user)
