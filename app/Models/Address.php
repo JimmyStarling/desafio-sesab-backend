@@ -10,6 +10,6 @@ class Address extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class, 'address_user', 'address_id', 'user_id')->withTimestamps();
     }
 }
