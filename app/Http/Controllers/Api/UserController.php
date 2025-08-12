@@ -3,54 +3,58 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-
-use App\Models\User;
+use App\Domain\User\Repositories\UserRepositoryInterface;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
-
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
-    public function index(Request $request)
+    protected UserRepositoryInterface $users;
+
+    public function __construct(UserRepositoryInterface $users)
     {
-        $query = User::with(['profile', 'address']);
-
-        if ($request->filled('name')) {
-            $query->where('name', 'like', '%' . $request->name . '%');
-        }
-        if ($request->filled('cpf')) {
-            $query->where('cpf', $request->cpf);
-        }
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('created_at', [$request->start_date, $request->end_date]);
-        }
-
-        return response()->json($query->paginate(10));
+        $this->users = $users;
     }
 
-    public function store(StoreUserRequest $request)
+    public function index(Request $request): JsonResponse
     {
-        $user = User::create($request->validated());
-        $user->address()->sync($request->address);
-        return response()->json($user->load('profile', 'address'), 201);
+        return response()->json(
+            $this->users->search($request->only(['name', 'cpf', 'start_date', 'end_date']))
+        );
     }
 
-    public function show(User $user)
+    public function store(StoreUserRequest $request): JsonResponse
+    {
+        $user = $this->users->create(
+            $request->validated(),
+            $request->input('address', [])
+        );
+
+        return response()->json($user, 201);
+    }
+
+    public function show(User $user): JsonResponse
     {
         return response()->json($user->load('profile', 'address'));
     }
 
-    public function update(UpdateUserRequest $request, User $user)
+    public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
-        $user->update($request->validated());
-        $user->address()->sync($request->address);
-        return response()->json($user->load('profile', 'address'));
+        $updated = $this->users->update(
+            $user,
+            $request->validated(),
+            $request->input('address', [])
+        );
+
+        return response()->json($updated);
     }
 
-    public function destroy(User $user)
+    public function destroy(User $user): JsonResponse
     {
-        $user->delete();
+        $this->users->delete($user);
         return response()->json(null, 204);
     }
 }
