@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Foundation\Http\Request;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -11,7 +12,11 @@ class UpdateUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        if ($this->user()->profile_id != 1) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
