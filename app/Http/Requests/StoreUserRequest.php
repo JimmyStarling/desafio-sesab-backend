@@ -21,16 +21,13 @@ class StoreUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        $address_field = $this->has('address') ? 'address' : 'addresses';
         return [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'cpf' => 'required|string|size:11|unique:users,cpf',
             'profile_id' => 'required|exists:profiles,id',
-            //'addresses' => 'array',
-            //'addresses.*' => 'exists:addresses,id',
-            $address_field => 'required|array',
-            $address_field . '.*' => 'exists:addresses,id',
+            'address' => 'required|array',
+            'address' . '.*' => 'exists:address,id',
         ];
     }
 }
