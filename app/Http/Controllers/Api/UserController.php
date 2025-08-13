@@ -10,8 +10,12 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 class UserController extends Controller
 {
+    use AuthorizesRequests;
+
     protected UserRepositoryInterface $users;
 
     public function __construct(UserRepositoryInterface $users)
@@ -43,6 +47,8 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
+        $this->authorize('update', $user);
+
         $updated = $this->users->update(
             $user,
             $request->validated(),
