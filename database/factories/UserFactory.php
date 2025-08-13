@@ -32,7 +32,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'profile_id' => null,
-            'cpf' => str_pad(rand(0, 99999999999), 11, '0', STR_PAD_LEFT)
+            'cpf' => str_pad(rand(0, 99999999999), 11, '0', STR_PAD_LEFT),
         ];
     }
 
