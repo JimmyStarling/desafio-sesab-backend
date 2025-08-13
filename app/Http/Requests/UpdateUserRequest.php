@@ -12,11 +12,7 @@ class UpdateUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        if ($this->user()->profile_id != 1) {
-            return false;
-        }
-
-        return true;
+        return $this->user()->can('update', $this->route('user'));
     }
 
     /**
