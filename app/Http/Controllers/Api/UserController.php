@@ -228,6 +228,7 @@ class UserController extends Controller
         $this->authorize('delete', $user);
 
         $this->users->delete($user, $request->validated());
-        return response()->json(null, 204);
+
+        return response()->json(['message'=>'User sucessfuly removed'], 204);
     }
 }
