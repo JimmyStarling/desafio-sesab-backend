@@ -3,6 +3,7 @@
 namespace App\Infrastructure\Persistence\Eloquent;
 
 use App\Models\User;
+use App\Models\Address;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -41,13 +42,15 @@ class UserRepository implements UserRepositoryInterface
         return $user->load('profile', 'address');
     }
 
-    public function update(User $user, array $data, array $addressIds = []): User
+    public function update(User $user, array $data, array $address= []): User
     {
+        /**$addressIds**/
         $user->update($data);
 
-        if (!empty($addressIds)) {
-            $user->address()->sync($addressIds);
-        }
+        $this->syncAddresses($user, $address);
+        //if (!empty($addressIds)) {
+        //    $user->address()->sync($addressIds);
+        //}
 
         return $user->load('profile', 'address');
     }
@@ -55,5 +58,25 @@ class UserRepository implements UserRepositoryInterface
     public function delete(User $user): bool
     {
         return $user->delete();
+    }
+
+    private function syncAddresses(User $user, array $addresses)
+    {
+        if (!empty($addresses)) {
+            $addressIds = [];
+
+            foreach ($addresses as $addressData) {
+                $address = Address::firstOrCreate([
+                    'street' => $addressData['street'],
+                    'city'   => $addressData['city'],
+                    'state'  => $addressData['state'],
+                    'zip'    => $addressData['zip'],
+                ]);
+
+                $addressIds[] = $address->id;
+            }
+
+            $user->address()->sync($addressIds);
+        }
     }
 }
