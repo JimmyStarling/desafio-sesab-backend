@@ -9,6 +9,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
+/**
+ * @OA\Schema(
+ *     schema="User",
+ *     type="object",
+ *     title="User",
+ *     required={"id", "name", "email"},
+ *     @OA\Property(property="id", type="integer"),
+ *     @OA\Property(property="name", type="string"),
+ *     @OA\Property(property="email", type="string"),
+ *     @OA\Property(property="cpf", type="string"),
+ *     @OA\Property(property="profile_id", type="integer"),
+ *     @OA\Property(
+ *         property="address",
+ *         type="array",
+ *         @OA\Items(ref="#/components/schemas/Address")
+ *     )
+ * )
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
