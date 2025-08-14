@@ -9,6 +9,6 @@ interface UserRepositoryInterface
 {
     public function search(array $filters): LengthAwarePaginator;
     public function create(array $data, array $addressIds = []): User;
-    public function update(User $user, array $data, array $addressIds = []): User;
+    public function update(User $user, array $data, array $address = []): User; // $addressIds
     public function delete(User $user): bool;
 }
