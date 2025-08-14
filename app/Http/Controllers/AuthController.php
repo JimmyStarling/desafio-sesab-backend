@@ -6,6 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Domain\Auth\Repositories\AuthRepositoryInterface;
 
+/**
+ * @OA\Tag(
+ *     name="Auth",
+ *     description="API Endpoints for authentication"
+ * )
+ */
 class AuthController extends Controller
 {
     protected AuthRepositoryInterface $auth;
@@ -15,6 +21,46 @@ class AuthController extends Controller
         $this->auth = $auth;
     }
 
+     /**
+     * @OA\Post(
+     *     path="/api/register",
+     *     tags={"Auth"},
+     *     summary="Register a new user",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"name","email","cpf","password","profile_id"},
+     *             @OA\Property(property="name", type="string", example="Jimmy Starling"),
+     *             @OA\Property(property="email", type="string", example="jimmy@example.com"),
+     *             @OA\Property(property="cpf", type="string", example="12345678901"),
+     *             @OA\Property(property="password", type="string", example="password123"),
+     *             @OA\Property(property="password_confirmation", type="string", example="password123"),
+     *             @OA\Property(property="profile_id", type="integer", example=1),
+     *             @OA\Property(property="address", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="street", type="string", example="123 Main St"),
+     *                     @OA\Property(property="city", type="string", example="New York"),
+     *                     @OA\Property(property="state", type="string", example="NY"),
+     *                     @OA\Property(property="zip", type="string", example="10001")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="User successfully registered",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="User successfully registered"),
+     *             @OA\Property(property="access_token", type="string"),
+     *             @OA\Property(property="token_type", type="string", example="Bearer"),
+     *             @OA\Property(property="user", ref="#/components/schemas/User")
+     *         )
+     *     ),
+     *     @OA\Response(response=400, description="Validation error")
+     * )
+     */
     public function register(Request $request): JsonResponse
     {
         $request->validate([
@@ -42,6 +88,33 @@ class AuthController extends Controller
         ], 201);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/login",
+     *     tags={"Auth"},
+     *     summary="Login user and get access token",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"email","password"},
+     *             @OA\Property(property="email", type="string", example="jimmy@example.com"),
+     *             @OA\Property(property="password", type="string", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful login",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="User successfully logged in"),
+     *             @OA\Property(property="access_token", type="string"),
+     *             @OA\Property(property="token_type", type="string", example="Bearer"),
+     *             @OA\Property(property="user", ref="#/components/schemas/User")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function login(Request $request): JsonResponse
     {
         $request->validate([
@@ -66,6 +139,22 @@ class AuthController extends Controller
         return response()->json($this->auth->getUserProfile($request->user()));
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/logout",
+     *     tags={"Auth"},
+     *     summary="Logout user and revoke tokens",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Logout successful",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="User logged out and tokens revoked")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function logout(Request $request): JsonResponse
     {
         $this->auth->logout($request->user());
