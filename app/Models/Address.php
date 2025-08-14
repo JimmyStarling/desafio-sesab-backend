@@ -5,6 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * @OA\Schema(
+ *     schema="Address",
+ *     type="object",
+ *     title="Address",
+ *     required={"street","city","state","zip"},
+ *     @OA\Property(property="street", type="string"),
+ *     @OA\Property(property="city", type="string"),
+ *     @OA\Property(property="state", type="string"),
+ *     @OA\Property(property="zip", type="string")
+ * )
+ */
 class Address extends Model
 {
     use HasFactory;
