@@ -6,7 +6,7 @@ use App\Models\User;
 
 interface AuthRepositoryInterface
 {
-    public function register(array $data): User;
+    public function register(bool $is_authenticated, array $data): User;
 
     public function login(string $email, string $password): ?User;
 
