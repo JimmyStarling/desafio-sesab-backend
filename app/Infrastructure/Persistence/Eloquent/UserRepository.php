@@ -31,26 +31,44 @@ class UserRepository implements UserRepositoryInterface
         return $query->paginate(10);
     }
 
-    public function create(array $data, array $addressIds = []): User
+    public function create(bool $is_authenticated, array $data, array $address = []): User
     {
-        $user = User::create($data);
-
-        if (!empty($addressIds)) {
-            $user->address()->sync($addressIds);
+        // Validate required fields
+        $profileId = $this->userService->checkProfile(
+            auth()->check(),
+            $data['profile_id']
+        );
+        if (!isset($data['name'], $data['email'], $data['cpf'], $data['password'], $data['profile_id'])) {
+            throw new \InvalidArgumentException('Required fields are missing.');
         }
+        if ($data['profile_id'] === 0) {
+            throw new \Exception('Unauthorized to create user with this profile.', 403);
+        }
+        
+        // Create user
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'cpf' => $data['cpf'],
+            'password' => Hash::make($data['password']),
+            'profile_id' => $data['profile_id'],
+            'email_verified_at' => now(),
+            'remember_token' => Str::random(10),
+        ]);
+        $address = $data['address'] ?? [];
 
+        // Sync addresses
+        $this->syncAddresses($user, $address);
+        
+        // Load address and profile
         return $user->load('profile', 'address');
     }
 
-    public function update(User $user, array $data, array $address= []): User
+    public function update(User $user, array $data, $address = []): User
     {
-        /**$addressIds**/
         $user->update($data);
 
         $this->syncAddresses($user, $address);
-        //if (!empty($addressIds)) {
-        //    $user->address()->sync($addressIds);
-        //}
 
         return $user->load('profile', 'address');
     }
@@ -58,25 +76,5 @@ class UserRepository implements UserRepositoryInterface
     public function delete(User $user): bool
     {
         return $user->delete();
-    }
-
-    private function syncAddresses(User $user, array $addresses)
-    {
-        if (!empty($addresses)) {
-            $addressIds = [];
-
-            foreach ($addresses as $addressData) {
-                $address = Address::firstOrCreate([
-                    'street' => $addressData['street'],
-                    'city'   => $addressData['city'],
-                    'state'  => $addressData['state'],
-                    'zip'    => $addressData['zip'],
-                ]);
-
-                $addressIds[] = $address->id;
-            }
-
-            $user->address()->sync($addressIds);
-        }
     }
 }
