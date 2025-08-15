@@ -4,6 +4,22 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/** 
+ * @OA\Schema(
+ *     schema="DeleteUserRequest",
+ *     type="object",
+ *     title="Delete User Request",
+ *     description="Remove user from the system",
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID of the user to retrieve",
+ *         @OA\Schema(type="integer")
+ *     )
+ * )
+ * 
+ **/
 class DeleteUserRequest extends FormRequest
 {
     /**
