@@ -25,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Domain\Address\Repositories\AddressRepositoryInterface::class,
             \App\Infrastructure\Persistence\Eloquent\AddressRepository::class
         );
+
+        $this->app->bind(UserService::class, function ($app) {
+            return new UserService();
+        });
     }
 
     /**
