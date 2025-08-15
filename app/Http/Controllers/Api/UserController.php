@@ -8,6 +8,8 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\DeleteUserRequest;
 use App\Models\User;
+use LaravelLegends\PtBrValidator\Rules\FormatoCpf;
+use LaravelLegends\PtBrValidator\Rules\FormatoCep;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -103,12 +105,40 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
-        $user = $this->users->create(
-            $request->validated(),
-            $request->input('address', [])
-        );
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'cpf' => ['required','unique:users', new FormatoCpf],
+            'password' => 'required|string|min:8|confirmed',
+            'profile_id' => 'required|exists:profiles,id',
+            'address' => 'sometimes|array|min:1',
+            'address.*.street' => 'required_with:address|string|max:255',
+            'address.*.city' => 'required_with:address|string|max:255',
+            'address.*.state' => 'required_with:address|string|max:255',
+            'address.*.zip' => ['required_with:address', new FormatoCep],
+        ]);
+        $is_authenticated = auth()->check();
 
-        return response()->json($user, 201);
+        $user = $this->users->create($request->all());
+
+        // Check errors from register request
+        $exception = !exists($user, 'error');
+        
+        if(!$exception) {
+            return response()->json([
+                'message' => $user['error'],
+            ], 401);
+        }
+
+        // If not, create token and return json
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'User successfully created',
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user,
+        ], 201);
     }
 
     /**
