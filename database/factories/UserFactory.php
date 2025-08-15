@@ -29,11 +29,42 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => static::$password ??= Hash::make('password'), // Default password of all users
             'remember_token' => Str::random(10),
             'profile_id' => null,
-            'cpf' => str_pad(rand(0, 99999999999), 11, '0', STR_PAD_LEFT),
+            'cpf' => $this->generateValidCpf(),
         ];
+    }
+
+    /**
+     * Indicate that the model's CPF should be valid.
+     */
+    private function generateValidCpf()
+    {
+        // Gera os 9 primeiros dígitos
+        $cpf = [];
+        for ($i = 0; $i < 9; $i++) {
+            $cpf[] = rand(0, 9);
+        }
+
+        // Calcula primeiro dígito verificador
+        $sum = 0;
+        for ($i = 0, $weight = 10; $i < 9; $i++, $weight--) {
+            $sum += $cpf[$i] * $weight;
+        }
+        $remainder = $sum % 11;
+        $cpf[] = ($remainder < 2) ? 0 : 11 - $remainder;
+
+        // Calcula segundo dígito verificador
+        $sum = 0;
+        for ($i = 0, $weight = 11; $i < 10; $i++, $weight--) {
+            $sum += $cpf[$i] * $weight;
+        }
+        $remainder = $sum % 11;
+        $cpf[] = ($remainder < 2) ? 0 : 11 - $remainder;
+
+        return implode('', $cpf);
+        //return vsprintf('%d%d%d.%d%d%d.%d%d%d-%d%d', $cpf);
     }
 
     /**
