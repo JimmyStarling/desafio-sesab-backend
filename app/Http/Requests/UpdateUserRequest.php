@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Foundation\Http\Request;
+use LaravelLegends\PtBrValidator\Rules\FormatoCpf;
 
 /**
  * @OA\Schema(
@@ -49,7 +50,7 @@ class UpdateUserRequest extends FormRequest
         return [
             'name'     => 'sometimes|string|max:255',
             'email'    => 'sometimes|email|unique:users,email,' . $this->route('user')->id,
-            'cpf'      => 'sometimes|string|max:11|unique:users,cpf,' . $this->route('user')->id,
+            'cpf' => ['sometimes', 'unique:users,cpf,' . $this->route('user')->id, new FormatoCpf],
             'password' => 'sometimes|string|confirmed|min:6',
             'profile_id' => 'sometimes|integer|exists:profiles,id',
         ];
