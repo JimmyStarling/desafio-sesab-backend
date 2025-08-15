@@ -81,63 +81,91 @@ class UserController extends Controller
         );
     }
 
-    /**
-     * @OA\Post(
+    /** DEPRECATED
+     * OA\Post(
      *     path="/api/users",
-     *     tags={"Auth"},
+     *     tags={"Users"},
      *     summary="Create a new user",
-     *     @OA\RequestBody(
+     *     OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(ref="#/components/schemas/StoreUserRequest")
      *     ),
-     *     @OA\Response(
+     *     OA\Response(
      *         response=201,
      *         description="User successfully registered",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="User successfully registered"),
-     *             @OA\Property(property="access_token", type="string"),
-     *             @OA\Property(property="token_type", type="string", example="Bearer"),
-     *             @OA\Property(property="user", ref="#/components/schemas/User")
+     *         OA\JsonContent(
+     *             OA\Property(property="message", type="string", example="User successfully registered"),
+     *             OA\Property(property="access_token", type="string"),
+     *             OA\Property(property="token_type", type="string", example="Bearer"),
+     *             OA\Property(property="user", ref="#/components/schemas/User")
      *         )
      *     ),
-     *     @OA\Response(response=400, description="Validation error")
+     *     OA\Response(response=400, description="Validation error")
+     * )
+    *public function store(StoreUserRequest $request): JsonResponse
+    *{
+    *
+    *    $usersData = $request->all(); // será um array de usuários
+    *    $createdUsers = [];
+    *   foreach ($usersData as $userData) {
+    *       // Autorização para cada usuário
+    *       if (!$request->user()->can('create', User::class)) {
+    *           return response()->json(['message' => 'Unauthorized'], 403);
+    *       }
+
+    *       // Criar usuário
+    *       $createdUsers[] = $this->users->create(true, $userData);
+    *   }
+    *   return response()->json([
+    *       'message' => 'Users successfully created',
+    *       'users' => $createdUsers
+    *   ], 201);
+    *}**/
+
+    /**
+     * @OA\Post(
+     *     path="/api/users/bulk",
+     *     tags={"Users"},
+     *     summary="Create multiple users",
+     *     description="Creates multiple users in a single request. Only authenticated users with proper permissions can perform this action.",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/StoreUserRequest")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Users successfully created",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Users created successfully"),
+     *             @OA\Property(
+     *                 property="users",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/User")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Validation error"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
      * )
      */
-    public function store(StoreUserRequest $request): JsonResponse
+    public function storeBulk(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'cpf' => ['required','unique:users', new FormatoCpf],
-            'password' => 'required|string|min:8|confirmed',
-            'profile_id' => 'required|exists:profiles,id',
-            'address' => 'sometimes|array|min:1',
-            'address.*.street' => 'required_with:address|string|max:255',
-            'address.*.city' => 'required_with:address|string|max:255',
-            'address.*.state' => 'required_with:address|string|max:255',
-            'address.*.zip' => ['required_with:address', new FormatoCep],
-        ]);
-        $is_authenticated = auth()->check();
-
-        $user = $this->users->create($request->all());
-
-        // Check errors from register request
-        $exception = !exists($user, 'error');
-        
-        if(!$exception) {
-            return response()->json([
-                'message' => $user['error'],
-            ], 401);
-        }
-
-        // If not, create token and return json
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $usersData = $request->all(); // ou $request->input('users')
+        $createdUsers = $this->users->create(auth()->check(), $usersData);
 
         return response()->json([
-            'message' => 'User successfully created',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user,
+            'message' => 'Users created successfully',
+            'users' => $createdUsers
         ], 201);
     }
 
