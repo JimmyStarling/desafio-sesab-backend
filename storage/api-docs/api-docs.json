@@ -179,6 +179,54 @@
                         "bearerAuth": []
                     }
                 ]
+            },
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Create a new user",
+                "operationId": "be551c1d694a01c164966f58bfa77013",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User successfully registered",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User successfully registered"
+                                        },
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error"
+                    }
+                }
             }
         },
         "/api/users/{id}": {
@@ -524,8 +572,13 @@
     },
     "components": {
         "schemas": {
-            "UpdateUserRequest": {
-                "title": "UpdateUser",
+            "DeleteUserRequest": {
+                "title": "Delete User Request",
+                "description": "Remove user from the system",
+                "type": "object"
+            },
+            "StoreUserRequest": {
+                "title": "Create User Request",
                 "required": [
                     "name",
                     "email",
@@ -544,7 +597,7 @@
                     },
                     "cpf": {
                         "type": "string",
-                        "example": "12345678901"
+                        "example": "670.653.190-16"
                     },
                     "password": {
                         "type": "string",
@@ -576,7 +629,69 @@
                                 },
                                 "zip": {
                                     "type": "string",
-                                    "example": "10001"
+                                    "example": "68702-190"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateUserRequest": {
+                "title": "UpdateUser",
+                "description": "Update user information",
+                "required": [
+                    "name",
+                    "email",
+                    "cpf",
+                    "password",
+                    "profile_id"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Jimmy Starling"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "jimmy@example.com"
+                    },
+                    "cpf": {
+                        "type": "string",
+                        "example": "670.653.190-16"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "password123"
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "example": "password123"
+                    },
+                    "profile_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "address": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "street": {
+                                    "type": "string",
+                                    "example": "123 Main St"
+                                },
+                                "city": {
+                                    "type": "string",
+                                    "example": "New York"
+                                },
+                                "state": {
+                                    "type": "string",
+                                    "example": "NY"
+                                },
+                                "zip": {
+                                    "type": "string",
+                                    "example": "68702-190"
                                 }
                             },
                             "type": "object"
