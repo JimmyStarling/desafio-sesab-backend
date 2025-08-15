@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\AddressController;
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 
+Route::post('/users/bulk', [UserController::class, 'storeBulk'])->middleware('auth:sanctum');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('user', [AuthController::class, 'userProfile']);
     Route::apiResource('users', UserController::class);
