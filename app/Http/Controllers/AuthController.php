@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Domain\Auth\Repositories\AuthRepositoryInterface;
+use LaravelLegends\PtBrValidator\Rules\FormatoCpf;
+use LaravelLegends\PtBrValidator\Rules\FormatoCep;
 
 /**
  * @OA\Tag(
@@ -66,18 +68,20 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'cpf' => 'required|string|unique:users',
+            'cpf' => ['required','unique:users', new FormatoCpf],
             'password' => 'required|string|min:8|confirmed',
             'profile_id' => 'required|exists:profiles,id',
             'address' => 'sometimes|array|min:1',
             'address.*.street' => 'required_with:address|string|max:255',
             'address.*.city' => 'required_with:address|string|max:255',
             'address.*.state' => 'required_with:address|string|max:255',
-            'address.*.zip' => 'required_with:address|string|max:20',
+            'address.*.zip' => ['required_with:address', new FormatoCep]//'required_with:address|string|max:20',
         ]);
+        $is_authenticated = auth()->check();
+        // Call register logic from repository
+        $user = $this->auth->register($is_authenticated, $request->all());
 
-        $user = $this->auth->register($request->all());
-
+        // If not, create token and return json
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
