@@ -3,6 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use LaravelLegends\PtBrValidator\Rules\FormatoCpf;
+use LaravelLegends\PtBrValidator\Rules\FormatoCep;
+use App\Models\User;
 
 /**
  * @OA\Schema(
@@ -34,7 +37,15 @@ class StoreUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('store', $this->route('user'));
+        // Se não estiver autenticado, libera apenas para criação de usuário padrão
+        if (!$this->user() && $this->input('profile_id') == 3) {
+            return true;
+        }
+
+        // Se estiver autenticado, verifica permissão no Policy
+        return $this->user()
+            ? $this->user()->can('create', User::class)
+            : false;
     }
 
     /**
@@ -45,12 +56,16 @@ class StoreUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'cpf' => 'required|string|size:11|unique:users,cpf',
-            'profile_id' => 'required|exists:profiles,id',
-            'address' => 'required|array',
-            'address' . '.*' => 'exists:address,id',
+            '*.name' => 'required|string|max:255',
+            '*.email' => 'required|string|email|max:255|unique:users,email',
+            '*.cpf' => ['required','unique:users', new FormatoCpf],
+            '*.password' => 'required|string|min:8|confirmed',
+            '*.profile_id' => 'required|exists:profiles,id',
+            '*.address' => 'sometimes|array|min:1',
+            '*.address.*.street' => 'required_with:*.address|string|max:255',
+            '*.address.*.city' => 'required_with:*.address|string|max:255',
+            '*.address.*.state' => 'required_with:*.address|string|max:255',
+            '*.address.*.zip' => ['required_with:*.address', new FormatoCep],
         ];
     }
 }
