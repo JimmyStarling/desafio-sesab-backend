@@ -179,43 +179,45 @@
                         "bearerAuth": []
                     }
                 ]
-            },
+            }
+        },
+        "/api/users/bulk": {
             "post": {
                 "tags": [
-                    "Auth"
+                    "Users"
                 ],
-                "summary": "Create a new user",
-                "operationId": "be551c1d694a01c164966f58bfa77013",
+                "summary": "Create multiple users",
+                "description": "Creates multiple users in a single request. Only authenticated users with proper permissions can perform this action.",
+                "operationId": "b37d49d1fecf07636b0a9a28dedcf7fc",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/StoreUserRequest"
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/StoreUserRequest"
+                                }
                             }
                         }
                     }
                 },
                 "responses": {
                     "201": {
-                        "description": "User successfully registered",
+                        "description": "Users successfully created",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "User successfully registered"
+                                            "example": "Users created successfully"
                                         },
-                                        "access_token": {
-                                            "type": "string"
-                                        },
-                                        "token_type": {
-                                            "type": "string",
-                                            "example": "Bearer"
-                                        },
-                                        "user": {
-                                            "$ref": "#/components/schemas/User"
+                                        "users": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -225,8 +227,16 @@
                     },
                     "400": {
                         "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/users/{id}": {
@@ -393,7 +403,7 @@
                                     },
                                     "cpf": {
                                         "type": "string",
-                                        "example": "12345678901"
+                                        "example": "123.456.789-01"
                                     },
                                     "password": {
                                         "type": "string",
@@ -425,7 +435,7 @@
                                                 },
                                                 "zip": {
                                                     "type": "string",
-                                                    "example": "10001"
+                                                    "example": "68702-190"
                                                 }
                                             },
                                             "type": "object"
@@ -489,11 +499,11 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
-                                        "example": "jimmy@example.com"
+                                        "example": "root@root.com"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "example": "password123"
+                                        "example": "root"
                                     }
                                 },
                                 "type": "object"
