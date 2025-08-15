@@ -38,7 +38,7 @@ class AuthRepository implements AuthRepositoryInterface
             'name' => $data['name'],
             'email' => $data['email'],
             'cpf' => $data['cpf'],
-            'password' => Hash::make($data['password']),
+            'password' => bcrypt($data['password']),
             'profile_id' => $data['profile_id'],
             'email_verified_at' => now(),
             'remember_token' => Str::random(10),
