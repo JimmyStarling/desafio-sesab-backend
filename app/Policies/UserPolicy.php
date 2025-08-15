@@ -38,5 +38,4 @@ class UserPolicy
     {
         return $authUser->profile_id === 1;
     }
-
 }
