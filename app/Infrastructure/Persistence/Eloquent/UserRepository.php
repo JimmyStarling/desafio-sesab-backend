@@ -6,9 +6,16 @@ use App\Models\User;
 use App\Models\Address;
 use App\Domain\User\Repositories\UserRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Domain\User\Services\UserService;
+use Illuminate\Support\Str;
 
 class UserRepository implements UserRepositoryInterface
 {
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     public function search(array $filters): LengthAwarePaginator
     {
         $query = User::with(['profile', 'address']);
@@ -31,44 +38,53 @@ class UserRepository implements UserRepositoryInterface
         return $query->paginate(10);
     }
 
-    public function create(bool $is_authenticated, array $data, array $address = []): User
+    public function create(bool $is_authenticated, array $usersData): array
     {
-        // Validate required fields
-        $profileId = $this->userService->checkProfile(
-            auth()->check(),
-            $data['profile_id']
-        );
-        if (!isset($data['name'], $data['email'], $data['cpf'], $data['password'], $data['profile_id'])) {
-            throw new \InvalidArgumentException('Required fields are missing.');
-        }
-        if ($data['profile_id'] === 0) {
-            throw new \Exception('Unauthorized to create user with this profile.', 403);
-        }
-        
-        // Create user
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'cpf' => $data['cpf'],
-            'password' => Hash::make($data['password']),
-            'profile_id' => $data['profile_id'],
-            'email_verified_at' => now(),
-            'remember_token' => Str::random(10),
-        ]);
-        $address = $data['address'] ?? [];
+        $createdUsers = [];
 
-        // Sync addresses
-        $this->syncAddresses($user, $address);
-        
-        // Load address and profile
-        return $user->load('profile', 'address');
+        foreach ($usersData as $data) {
+            // Valida campos obrigatórios
+            if (!isset($data['name'], $data['email'], $data['cpf'], $data['password'], $data['profile_id'])) {
+                throw new \InvalidArgumentException('Required fields are missing.');
+            }
+
+            // Checa profile_id via serviço
+            $profileId = $this->userService->checkProfile(
+                $is_authenticated,
+                $data['profile_id']
+            );
+
+            if ($profileId === 0) {
+                throw new \Exception('Unauthorized to create user with this profile.', 403);
+            }
+
+            // Criação do usuário
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'cpf' => $data['cpf'],
+                'password' => bcrypt($data['password']),
+                'profile_id' => $profileId,
+                'email_verified_at' => now(),
+                'remember_token' => Str::random(10),
+            ]);
+
+            // Sincroniza endereços
+            $addresses = $data['address'] ?? [];
+            $this->userService->syncAddresses($user, $addresses);
+
+            // Carrega relacionamento
+            $createdUsers[] = $user->load('profile', 'address');
+        }
+
+        return $createdUsers;
     }
 
     public function update(User $user, array $data, $address = []): User
     {
         $user->update($data);
 
-        $this->syncAddresses($user, $address);
+        $this->userService->syncAddresses($user, $address);
 
         return $user->load('profile', 'address');
     }
